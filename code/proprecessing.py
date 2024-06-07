@@ -67,12 +67,12 @@ def co_word2idx(texts):
 
 #整理类别和索引
 def co_labeldict(labels,labels_idx):
-    id2label={}
-    label2id={}
-    for category, value in zip(labels, labels_idx):
-        id2label[int(value)] = category
-        label2id[category] = int(value)
-    return id2label,label2id
+
+    label_freq = dict(Counter(labels))
+    
+    id2labels = {i: label for i, label in enumerate(label_freq)}
+    labels2id = {label: i for i, label in enumerate(label_freq)}
+    return id2labels,labels2id
 
 #将三个数据集的中的文字转化为索引，并且将每段文字裁剪或扩展为100个字
 def co_vec(dataset_data,word2idx):
@@ -93,7 +93,7 @@ def co_vec(dataset_data,word2idx):
         #填充
         else:
             padding_len=100-len(data_vec)
-            data_vec = data_vec + [-1] * padding_len
+            data_vec = data_vec + [len(word2idx)+1] * padding_len
         dataset_list.append(data_vec)
     return dataset_list
 

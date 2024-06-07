@@ -8,12 +8,12 @@ class CNN_LSTM(nn.Module):
     def __init__(self,num_classes,embedding_dim=100) :
         super(CNN_LSTM,self).__init__()
         #嵌入
-        self.embedding = nn.Embedding(7000, embedding_dim)
-        self.conv1 = nn.Conv1d(embedding_dim, 32, kernel_size=3, padding=1)
+        self.embedding = nn.Embedding(7000+2, embedding_dim)
+        self.conv1 = nn.Conv1d(embedding_dim, 64, kernel_size=3, padding=1)
         self.maxpool1 = nn.MaxPool1d(kernel_size=2)
-        self.conv2 = nn.Conv1d(32, 32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv1d(64, 64, kernel_size=3, padding=1)
         self.maxpool2 = nn.MaxPool1d(kernel_size=2)
-        self.lstm = nn.LSTM(32, 100, dropout=0.2, batch_first=True)
+        self.lstm = nn.LSTM(64, 100, dropout=0.2, batch_first=True)
         self.fc = nn.Linear(100, num_classes)
 
 
