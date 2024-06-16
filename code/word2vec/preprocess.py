@@ -56,9 +56,3 @@ class TextProcessor:
         return id2labels, labels2id
     
 
-'''
-text_processor = TextProcessor()
-texts = text_processor.texts
-label_ids = text_processor.labels_id
-id2label = text_processor.id2label
-'''

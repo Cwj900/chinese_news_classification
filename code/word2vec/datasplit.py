@@ -30,7 +30,7 @@ class DataProcessor:
         
         self.text2indexs = self.texts_to_index(self.texts)
 
-        self.train_data, self.val_data, self.train_labels, self.val_labels = self.split_data()
+        self.train_data, self.val_data,self.test_data,self.train_labels, self.val_labels, self.test_labels = self.split_data()
         self.train_loader = self.create_dataloader(self.train_data, self.train_labels)
         self.val_loader = self.create_dataloader(self.val_data, self.val_labels)
 
@@ -48,23 +48,10 @@ class DataProcessor:
         print("划分数据...")
         train_data, rest_data, train_labels, rest_labels = train_test_split(self.text2indexs, self.labels_id, test_size=self.split1,random_state=42)
         val_data, test_data, val_labels, test_labels = train_test_split(rest_data, rest_labels, test_size=self.split2, random_state=42)
-        return train_data, val_data, train_labels, val_labels
+        return train_data, val_data,test_data, train_labels, val_labels, test_labels
 
     def create_dataloader(self, data, labels):
         print("创建数据加载器...")
         dataset = TextDataset(data, labels)
         return DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
 
-
-'''
-text_processor = TextProcessor()
-texts = text_processor.texts
-label_ids = text_processor.labels_id
-id2label = text_processor.id2label
-
-word2vec_model = Word2Vec.load("model/word2vec.model")
-
-data_processor = DataProcessor(word2vec_model, texts, label_ids)
-train_dataloader = data_processor.train_loader
-val_dataloader = data_processor.val_loader
-'''
