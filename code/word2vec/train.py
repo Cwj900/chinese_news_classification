@@ -7,7 +7,6 @@ import torch.optim as optim
 from tqdm import tqdm
 import numpy as np
 
-from gensim.models import Word2Vec
 from model import CNN,CNN_LSTM
 
 def train(model,train_dataloader,val_dataloader,max_epochs=100):
@@ -64,31 +63,3 @@ def eval(val_dataloader,model,device):
 
         accuracy = total_correct / total_samples
     return accuracy
-
-
-#数据预处理
-text_processor = TextProcessor()
-texts = text_processor.texts
-label_ids = text_processor.labels_id
-id2label = text_processor.id2label
-
-#加载Word2Vec模型
-word2vec_model = Word2Vec.load("model/word2vec.model")
-#划分数据
-data_processor = DataProcessor(word2vec_model, texts, label_ids)
-train_dataloader = data_processor.train_loader
-val_dataloader = data_processor.val_loader
-
-#初始化嵌入层
-vocab_size = len(word2vec_model.wv.key_to_index) + 1 
-embedding_dim=100
-# 创建嵌入矩阵
-embedding_matrix = np.zeros((vocab_size, embedding_dim))
-for word, index in word2vec_model.wv.key_to_index.items():
-    embedding_matrix[index] = word2vec_model.wv[word]
-embedding_matrix = torch.tensor(embedding_matrix, dtype=torch.float32)
-#构建模型
-cnn_model = CNN (15,vocab_size,embedding_dim,embedding_matrix)
-lstm_model = CNN_LSTM (15,vocab_size,embedding_dim,embedding_matrix) 
-#训练模型
-train(cnn_model,train_dataloader,val_dataloader)

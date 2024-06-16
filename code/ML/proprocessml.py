@@ -46,10 +46,10 @@ def co_labeldict(labels):
     return id2label, label2id
 
 # 加载停用词
-stopwords = get_stopwords(r'C:\Users\HP\OneDrive\桌面\智能信息网络实验\final\chinese_news_classification\dataset\cn_stopwords.txt')
+stopwords = get_stopwords('./dataset/cn_stopwords.txt')
 
 # 数据预处理
-dataset_path = r'C:\Users\HP\OneDrive\桌面\智能信息网络实验\final\chinese_news_classification\dataset\dataset.txt'
+dataset_path = './dataset/dataset.txt'
 texts, labels = co_data(dataset_path, stopwords)
 
 # 创建标签索引映射

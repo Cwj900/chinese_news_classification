@@ -3,8 +3,11 @@ from joblib import dump, load
 import torch
 import numpy as np
 from proprocessml import X_test_ml,y_test_ml
-from proprecessing import TextProcessor,DataProcessor
-from model import TextCNN,CNN_LSTM
+from rank.proprecessing_rank import TextProcessor,DataProcessor
+from sklearn.metrics import confusion_matrix,classification_report
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 # 明确设置设备为CPU
 device = torch.device("cpu")
 
@@ -38,7 +41,51 @@ class EnsembleModel:
     def score(self, deep_inputs, ml_inputs, y_true):
         y_pred = self.predict(deep_inputs, ml_inputs)
         return accuracy_score(y_true, y_pred)
+
+def evaluate(model,data,labels,categories):
+    '''
     
+    '''
+    all_labels = []
+    all_predictions = []
+    total_correct = 0
+    total_samples = 0
+    # 使用模型进行预测
+    model.eval()  # 设置模型为评估模式
+
+    with torch.no_grad():
+        for inputs, labels in data:
+            inputs,labels=inputs.long().to(device),labels.long().to(device)
+            outputs = model(inputs)
+            _, predicted = torch.max(outputs, dim=1)
+            all_labels.extend(labels.cpu().numpy())
+            all_predictions.extend(predicted.cpu().numpy())
+            total_correct += (predicted == labels).sum().item()
+            total_samples += labels.size(0)
+
+    accuracy = total_correct / total_samples
+    print(f"Accuracy: {accuracy:.4f}")
+    
+    print(all_labels[:20])
+    print(all_predictions[:20])
+    # 计算混淆矩阵
+    cm = confusion_matrix(all_labels, all_predictions)
+    # 归一化混淆矩阵
+    cm_normalized=np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis],2)
+
+    #生成分类报告
+    report=classification_report(all_labels,all_predictions,target_names=categories)
+
+    #可视化
+    plt.figure(figsize=(10,7))
+    sns.heatmap(cm_normalized, annot=True, fmt='.2f', xticklabels=categories, yticklabels=categories)
+    plt.title('Confusion Matrix')
+    plt.ylabel('Actual label')
+    plt.xlabel('Predicted label')
+    plt.show()
+
+    return report
+
 
 text_processor = TextProcessor()
 texts = text_processor.texts
