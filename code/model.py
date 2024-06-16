@@ -150,3 +150,7 @@ test_dataloader = data_processor.test_loader
 vocab_size=len(vocab)+2
 model = TextCNN (15,vocab_size,100)
 train(model, train_dataloader,val_dataloader)
+
+from joblib import dump
+# 保存模型
+dump(model, 'deep_model.joblib')
