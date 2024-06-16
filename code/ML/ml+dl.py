@@ -42,58 +42,12 @@ class EnsembleModel:
         y_pred = self.predict(deep_inputs, ml_inputs)
         return accuracy_score(y_true, y_pred)
 
-def evaluate(model,data,labels,categories):
-    '''
-    
-    '''
-    all_labels = []
-    all_predictions = []
-    total_correct = 0
-    total_samples = 0
-    # 使用模型进行预测
-    model.eval()  # 设置模型为评估模式
-
-    with torch.no_grad():
-        for inputs, labels in data:
-            inputs,labels=inputs.long().to(device),labels.long().to(device)
-            outputs = model(inputs)
-            _, predicted = torch.max(outputs, dim=1)
-            all_labels.extend(labels.cpu().numpy())
-            all_predictions.extend(predicted.cpu().numpy())
-            total_correct += (predicted == labels).sum().item()
-            total_samples += labels.size(0)
-
-    accuracy = total_correct / total_samples
-    print(f"Accuracy: {accuracy:.4f}")
-    
-    print(all_labels[:20])
-    print(all_predictions[:20])
-    # 计算混淆矩阵
-    cm = confusion_matrix(all_labels, all_predictions)
-    # 归一化混淆矩阵
-    cm_normalized=np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis],2)
-
-    #生成分类报告
-    report=classification_report(all_labels,all_predictions,target_names=categories)
-
-    #可视化
-    plt.figure(figsize=(10,7))
-    sns.heatmap(cm_normalized, annot=True, fmt='.2f', xticklabels=categories, yticklabels=categories)
-    plt.title('Confusion Matrix')
-    plt.ylabel('Actual label')
-    plt.xlabel('Predicted label')
-    plt.show()
-
-    return report
-
-
 text_processor = TextProcessor()
 texts = text_processor.texts
 vocab = text_processor.vocab
 label_ids = text_processor.labels_id
 id2label = text_processor.id2label
 label2id = text_processor.label2id
-
 data_processor = DataProcessor(texts, label_ids, vocab)
 test_vec = data_processor.test_data
 
@@ -103,10 +57,32 @@ y_true = y_test_ml  # 真实的标签
 ml_model = load('ensemble_model.joblib')
 deep_model = load('deep_model.joblib')
 deep_model.eval()  # 确保模型在评估模式下
-
 # 将模型转移到CPU
 deep_model = deep_model.to(device)
 ensemble = EnsembleModel(deep_model, ml_model)
+
+
+ # 预测测试集结果
+y_pred = ensemble.predict(X_test_ml,test_vec)
+# 将预测的标签索引转换为实际的标签
+predicted_labels = [id2label[pred] for pred in y_pred]
+true_labels = [id2label[true] for true in y_test_ml]
+# 定义标签顺序
+labels_order = list(id2label.values())
+# 计算归一化混淆矩阵
+conf_matrix = confusion_matrix(true_labels, predicted_labels, labels=labels_order)
+conf_matrix_normalized = conf_matrix.astype('float') / conf_matrix.sum(axis=1)[:, np.newaxis]
+# 使用seaborn绘制归一化混淆矩阵的热力图
+plt.figure(figsize=(10, 8))
+sns.heatmap(conf_matrix_normalized, annot=True, fmt='.2f', cmap='Blues', xticklabels=labels_order, yticklabels=labels_order)
+plt.title('Normalized Confusion Matrix')
+plt.ylabel('True Label')
+plt.xlabel('Predicted Label')
+plt.show()
+report = classification_report(true_labels, predicted_labels)
+print(report)
+
+
 # 使用集成模型进行评估
 score = ensemble.score(deep_inputs, ml_inputs, y_true)
 print('Accuracy:', score)
