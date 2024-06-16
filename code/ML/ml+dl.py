@@ -41,6 +41,25 @@ class EnsembleModel:
     def score(self, deep_inputs, ml_inputs, y_true):
         y_pred = self.predict(deep_inputs, ml_inputs)
         return accuracy_score(y_true, y_pred)
+class ModelEvaluator:
+    def __init__(self, true_labels, pred_labels, id2label):
+        self.true_labels = [id2label[true] for true in true_labels]
+        self.pred_labels = [id2label[pred] for pred in pred_labels]
+        self.labels_order = list(id2label.values())
+    
+    def plot_normalized_confusion_matrix(self):
+        conf_matrix = confusion_matrix(self.true_labels, self.pred_labels, labels=self.labels_order)
+        conf_matrix_normalized = conf_matrix.astype('float') / conf_matrix.sum(axis=1)[:, np.newaxis]
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(conf_matrix_normalized, annot=True, fmt='.2f', cmap='Blues', xticklabels=self.labels_order, yticklabels=self.labels_order)
+        plt.title('Normalized Confusion Matrix')
+        plt.ylabel('True Label')
+        plt.xlabel('Predicted Label')
+        plt.show()
+    
+    def get_classification_report(self):
+        report = classification_report(self.true_labels, self.pred_labels)
+        return report
 
 text_processor = TextProcessor()
 texts = text_processor.texts
@@ -61,28 +80,19 @@ deep_model.eval()  # 确保模型在评估模式下
 deep_model = deep_model.to(device)
 ensemble = EnsembleModel(deep_model, ml_model)
 
+# 使用集成模型进行预测
+y_pred = ensemble.predict(deep_inputs, ml_inputs)
 
- # 预测测试集结果
-y_pred = ensemble.predict(X_test_ml,test_vec)
-# 将预测的标签索引转换为实际的标签
-predicted_labels = [id2label[pred] for pred in y_pred]
-true_labels = [id2label[true] for true in y_test_ml]
-# 定义标签顺序
-labels_order = list(id2label.values())
-# 计算归一化混淆矩阵
-conf_matrix = confusion_matrix(true_labels, predicted_labels, labels=labels_order)
-conf_matrix_normalized = conf_matrix.astype('float') / conf_matrix.sum(axis=1)[:, np.newaxis]
-# 使用seaborn绘制归一化混淆矩阵的热力图
-plt.figure(figsize=(10, 8))
-sns.heatmap(conf_matrix_normalized, annot=True, fmt='.2f', cmap='Blues', xticklabels=labels_order, yticklabels=labels_order)
-plt.title('Normalized Confusion Matrix')
-plt.ylabel('True Label')
-plt.xlabel('Predicted Label')
-plt.show()
-report = classification_report(true_labels, predicted_labels)
-print(report)
+# 创建ModelEvaluator实例
+evaluator = ModelEvaluator(y_true, y_pred, id2label)
 
+# 绘制并显示归一化混淆矩阵
+evaluator.plot_normalized_confusion_matrix()
+
+# 打印分类报告
+print(evaluator.get_classification_report())
 
 # 使用集成模型进行评估
 score = ensemble.score(deep_inputs, ml_inputs, y_true)
 print('Accuracy:', score)
+
