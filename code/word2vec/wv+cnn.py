@@ -9,9 +9,9 @@ import numpy as np
 
 from gensim.models import Word2Vec
 
-class CNN(nn.Module):
+class TextCNN(nn.Module):
     def __init__(self, num_classes, vocab_size, embedding_dim, embedding_matrix ):
-        super(CNN, self).__init__()
+        super(TextCNN, self).__init__()
         self.num_classes = num_classes
         self.embedding_layer = nn.Embedding(vocab_size, embedding_dim)
         self.embedding_layer.weight.data.copy_(embedding_matrix)
@@ -79,7 +79,7 @@ device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 embedding_matrix=embedding_matrix.to(device)
 
 #初始化模型
-model = CNN (15,vocab_size,100,embedding_matrix).to(device) # 创建模型实例
+model = TextCNN (15,vocab_size,100,embedding_matrix).to(device) # 创建模型实例
 loss_fn = nn.CrossEntropyLoss().to(device)# 定义损失函数
 optimizer = optim.Adam(model.parameters(), lr=1e-3)  # 定义优化器
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1) 
